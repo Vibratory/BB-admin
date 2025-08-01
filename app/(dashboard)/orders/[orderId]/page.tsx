@@ -16,11 +16,11 @@ const OrderDetails = async ({ params }: { params: { orderId: string } }) => {
 
   // get and show new total price of order in case admin updated quantity but db still same
 
-  const totalPrice =  orderDetails.products.reduce((acc: number, orderItem:any) => {
-                    const { price, newprice, solde } = orderItem.product;
-                    const effectivePrice = solde && newprice ? newprice : price;
-                    return acc + effectivePrice * orderItem.quantity;
-                  }, 0);
+  const totalPrice = orderDetails.products.reduce((acc: number, orderItem: any) => {
+    const { price, newprice, solde } = orderItem.product;
+    const effectivePrice = solde && newprice ? newprice : price;
+    return acc + effectivePrice * orderItem.quantity;
+  }, 0);
 
 
 
