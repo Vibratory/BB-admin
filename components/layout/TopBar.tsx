@@ -7,12 +7,13 @@ import { useState, useEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
 import { Menu } from "lucide-react";
 import { navLinks } from "@/lib/constants";
-const dropdownMenuRef = useRef<HTMLDivElement>(null);
 
 
 const TopBar = () => {
+  const dropdownMenuRef = useRef<HTMLDivElement>(null);
   const [dropdownMenu, setDropdownMenu] = useState(false);
   const pathname = usePathname();
+
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as Node;
@@ -56,7 +57,7 @@ const TopBar = () => {
         />
         {dropdownMenu && (
           <div ref={dropdownMenuRef}
-           className="absolute top-10 right-6 flex flex-col gap-8 p-5 bg-white shadow-xl rounded-lg">
+            className="absolute top-10 right-6 flex flex-col gap-8 p-5 bg-white shadow-xl rounded-lg">
             {navLinks.map((link) => (
               <Link
                 href={link.url}
