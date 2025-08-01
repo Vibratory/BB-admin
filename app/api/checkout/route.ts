@@ -129,7 +129,7 @@ export async function POST(req: NextRequest) {
       if (response.data.ok) {
 
         return NextResponse.json(
-          { redirectUrl: `${process.env.ECOMMERCE_STORE_URL}/payment_success?orderId=${newOrder._id}&name=${shipInfo.name}}`
+          { redirectUrl: `${process.env.ECOMMERCE_STORE_URL}/payment_success?orderId=${newOrder._id}&name=${shipInfo.name}`
  },
           { status: 200, headers: corsHeaders }
         );
