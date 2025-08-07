@@ -6,7 +6,7 @@ import Customer from "@/lib/models/Customer";
 import axios from "axios";
 import Product from "@/lib/models/Product";
 import { OrderItemType } from "@/lib/types";
-
+import nodemailer from "nodemailer";
 
 
 
@@ -105,7 +105,6 @@ export async function POST(req: NextRequest) {
     let text = `Message : ${message} \n\n`; // should include all details of order and time of order
 
     cartItems.forEach((item: any) => {
-      console.log("item.product is ===============> ", item.item)
       text += `Produit: ${item.item.title}\n`
       text += `Quantity: ${item.quantity}\n`
       text += `Taille: ${item.size}\n`
@@ -120,7 +119,45 @@ export async function POST(req: NextRequest) {
     text += `Ville: ${shipInfo.city}\n`;
     text += `Code Postal: ${shipInfo.zip}`;
 
+    //emails
+
+    const receiver = shipInfo.email
+
+    const transporter = nodemailer.createTransport({
+      host: "mail.boutika-brands.com",
+      port: 465,
+      secure: true, // ✅ must be true for port 465 (SSL)
+      auth: {
+        user: "noreply@boutika-brands.com",
+        pass: process.env.EMAIL_PASS, // use actual password or env var
+      },
+    });
+
+
+    const mailOptions = {
+      from: `"Your App" <${process.env.EMAIL_USER}>`,
+      to: receiver,
+      subject: "Confirm Your Email",
+      html: `
+      <h2>Hello ${shipInfo.name},</h2>
+      <p>Please confirm your email by clicking the link below:</p>
+      <a href="https://yourdomain.com/confirm?email=${receiver}">Confirm Email</a>
+    `,
+    };
+
+
+
+
     try {
+      try {
+        const info = await transporter.sendMail(mailOptions);
+
+      } catch (error) {
+        console.error('error sending email', error)
+
+      }
+
+
       const response = await axios.post(telegramUrl, {
         chat_id,
         text,
@@ -129,8 +166,9 @@ export async function POST(req: NextRequest) {
       if (response.data.ok) {
 
         return NextResponse.json(
-          { redirectUrl: `${process.env.ECOMMERCE_STORE_URL}/payment_success?orderId=${newOrder._id}&name=${shipInfo.name}`
- },
+          {
+            redirectUrl: `${process.env.ECOMMERCE_STORE_URL}/payment_success?orderId=${newOrder._id}&name=${shipInfo.name}`
+          },
           { status: 200, headers: corsHeaders }
         );
 
@@ -141,6 +179,7 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: "message failed to send" }, { headers: corsHeaders })
       }
 
+
     } catch (error) {
 
       console.error('error sending message to telegram', error)
@@ -148,6 +187,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json("error sending message", { headers: corsHeaders })
 
     }
+
+
+
 
     // stripe not applicable to algerian customer base
 

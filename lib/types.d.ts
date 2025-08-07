@@ -15,6 +15,7 @@ type ProductType = {
   media: [string];
   category: string;
   collections: [CollectionType];
+  colls:[Colltype];
   stock: number;
   tags: [string];
   colorVariants: ColorVariationsType[],
@@ -63,4 +64,10 @@ type ColorVariationsType = {
 type SizeVariationsType = {
   name: string,
   quantity: number
+}
+
+type Colltype = {
+  _id : string;
+  title: string;
+  products : ProductType[];
 }

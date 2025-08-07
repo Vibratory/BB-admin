@@ -1,4 +1,5 @@
 import Collection from "@/lib/models/Collection";
+import Coll from "@/lib/models/Coll";
 import Product from "@/lib/models/Product";
 import { connectToDB } from "@/lib/mongoDB";
 import { auth } from "@clerk/nextjs/server";
@@ -17,7 +18,11 @@ export const GET = async (
     const product = await Product.findById(params.productId).populate({
       path: "collections",
       model: Collection,
+    }).populate({
+      path: "colls",
+      model: Coll
     });
+
 
     if (!product) {
       return new NextResponse(
@@ -65,8 +70,9 @@ export const POST = async (
       title,
       description,
       media,
-      category,
+      subCategory,
       collections,
+      colls,
       stock,
       tags,
       sizes,
@@ -81,27 +87,27 @@ export const POST = async (
     } = await req.json();
 
 
-    if (!title || !description || !media || !category || !price) {
+    if (!title || !description || !media || !subCategory || !price) {
       return new NextResponse("Not enough data to create a new product", {
         status: 400,
       });
     }
 
-  // Get the old and new collection IDs
+    // Get the old and new collection IDs
     const oldCollectionIds = product.collections.map(String);
     const newCollectionIds = collections.map(String);
 
     const addedCollections = newCollectionIds.filter(
-      (id:string) => !oldCollectionIds.includes(id)
+      (id: string) => !oldCollectionIds.includes(id)
     );
 
     const removedCollections = oldCollectionIds.filter(
-      (id:string) => !newCollectionIds.includes(id)
+      (id: string) => !newCollectionIds.includes(id)
     );
 
     // Add product to new collections
     await Promise.all(
-      addedCollections.map((collectionId:string) =>
+      addedCollections.map((collectionId: string) =>
         Collection.findByIdAndUpdate(collectionId, {
           $addToSet: { products: product._id },
         })
@@ -110,14 +116,37 @@ export const POST = async (
 
     // Remove product from old collections that no longer apply
     await Promise.all(
-      removedCollections.map((collectionId:string) =>
+      removedCollections.map((collectionId: string) =>
         Collection.findByIdAndUpdate(collectionId, {
           $pull: { products: product._id },
         })
       )
     );
 
+    // Get the old and new coll IDs
+    const oldCollIds = product.colls.map(String);
+    const newCollIds = colls.map(String);
 
+    const addedColls = newCollIds.filter((id: string) => !oldCollIds.includes(id));
+    const removedColls = oldCollIds.filter((id: string) => !newCollIds.includes(id));
+
+    // Add product to new colls
+    await Promise.all(
+      addedColls.map((collId: string) =>
+        Coll.findByIdAndUpdate(collId, {
+          $addToSet: { products: product._id },
+        })
+      )
+    );
+
+    // Remove product from old colls
+    await Promise.all(
+      removedColls.map((collId: string) =>
+        Coll.findByIdAndUpdate(collId, {
+          $pull: { products: product._id },
+        })
+      )
+    );
 
     // Update product
     const updatedProduct = await Product.findByIdAndUpdate(
@@ -126,8 +155,9 @@ export const POST = async (
         title,
         description,
         media,
-        category,
+        subCategory,
         collections,
+        colls: newCollIds,
         stock,
         tags,
         sizes,
@@ -141,7 +171,8 @@ export const POST = async (
 
       },
       { new: true }
-    ).populate({ path: "collections", model: Collection });
+    ).populate({ path: "collections", model: Collection })
+      .populate({ path: "colls", model: Coll });
 
 
 
@@ -181,6 +212,16 @@ export const DELETE = async (
     await Promise.all(
       product.collections.map((collectionId: string) =>
         Collection.findByIdAndUpdate(collectionId, {
+          $pull: { products: product._id },
+        })
+      )
+    );
+
+    // Update colls
+
+    await Promise.all(
+      product.colls.map((collId: string) =>
+        Coll.findByIdAndUpdate(collId, {
           $pull: { products: product._id },
         })
       )

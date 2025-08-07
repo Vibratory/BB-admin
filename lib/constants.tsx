@@ -1,4 +1,5 @@
 import {
+  Group,
   LayoutDashboard,
   Shapes,
   ShoppingBag,
@@ -15,6 +16,11 @@ export const navLinks = [
   {
     url: "/collections",
     icon: <Shapes />,
+    label: "Catégories",
+  },
+    {
+    url: "/colls",
+    icon: <Group />,
     label: "Collections",
   },
   {

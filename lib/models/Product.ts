@@ -6,6 +6,7 @@ const ProductSchema = new mongoose.Schema({
   media: [String],
   category: String,
   collections: [{ type: mongoose.Schema.Types.ObjectId, ref: "Collection" }],
+  colls:[{ type: mongoose.Schema.Types.ObjectId, ref: "Coll" }],
   stock: String,
   tags: [String],
   colorVariants: [

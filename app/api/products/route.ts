@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { connectToDB } from "@/lib/mongoDB";
 import Product from "@/lib/models/Product";
 import Collection from "@/lib/models/Collection";
+import Coll from "@/lib/models/Coll";
 
 export const POST = async (req: NextRequest) => {
   try {
@@ -21,6 +22,7 @@ export const POST = async (req: NextRequest) => {
       media,
       category,
       collections,
+      colls,
       stock,
       tags,
       sizes,
@@ -46,6 +48,7 @@ export const POST = async (req: NextRequest) => {
       media,
       category,
       collections,
+      colls,
       stock,
       tags,
       sizes,
@@ -68,6 +71,16 @@ export const POST = async (req: NextRequest) => {
         )
       );
     }
+    if (colls?.length) {
+      await Promise.all(
+        colls.map((collId: string) =>
+          Coll.findByIdAndUpdate(
+            collId,
+            { $addToSet: { products: newProduct._id } } 
+          )
+        )
+      );
+    }
 
     return NextResponse.json(newProduct, { status: 200 });
   } catch (err) {
@@ -82,7 +95,8 @@ export const GET = async (req: NextRequest) => {
 
     const products = await Product.find()
       .sort({ createdAt: "desc" })
-      .populate({ path: "collections", model: Collection });
+      .populate({ path: "collections", model: Collection })
+      .populate({ path: "colls", model: Coll });
 
     return NextResponse.json(products, { status: 200 });
   } catch (err) {

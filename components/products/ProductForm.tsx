@@ -27,7 +27,7 @@ import MultiText from "@/components/custom ui/MultiText";
 import MultiSelect from "@/components/custom ui/MultiSelect";
 import Loader from "@/components/custom ui/Loader";
 
-import { ProductType, CollectionType } from "@/lib/types";
+import { ProductType, CollectionType, Colltype } from "@/lib/types";
 import ColorVariantItem from "./Variants";
 import { useWatch } from "react-hook-form";
 
@@ -36,8 +36,9 @@ const formSchema = z.object({
   title: z.string().min(2).max(150),
   description: z.string().min(2).max(500),
   media: z.array(z.string()),
-  category: z.string(),
+  subCategory: z.string(),
   collections: z.array(z.string()),
+  colls: z.array(z.string()),
   stock: z.coerce.number().min(0),
   tags: z.array(z.string()),
 
@@ -70,9 +71,11 @@ const ProductForm: React.FC<ProductFormProps> = ({ initialData }) => {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [collections, setCollections] = useState<CollectionType[]>([]);
+  const [colls, setColls] = useState<Colltype[]>([]);
+
   //const [checked, setLoading] = useState(true);
 
-
+/*collections == catgeories */
   const getCollections = async () => {
     try {
       const res = await fetch("/api/collections", { method: "GET" });
@@ -85,9 +88,25 @@ const ProductForm: React.FC<ProductFormProps> = ({ initialData }) => {
     }
   };
 
+
+/*colls == collections */
+
+  const getColls = async () => {
+    try {
+      const res = await fetch("/api/colls", { method: "GET" });
+      const data = await res.json();
+      setColls(data);
+    } catch (err) {
+      toast.error("Failed to load colls");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     getCollections();
-  }, []);
+    getColls();
+    }, []);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -95,13 +114,15 @@ const ProductForm: React.FC<ProductFormProps> = ({ initialData }) => {
       ? {
         ...initialData,
         collections: initialData.collections.map((c) => c._id),
+        colls: initialData.colls.map((a) => a._id),
       }
       : {
         title: "",
         description: "",
         media: [],
-        category: "",
+        subCategory: "",
         collections: [],
+        colls:[],
         stock: 1,
         tags: [],
         colorVariants: [
@@ -115,7 +136,7 @@ const ProductForm: React.FC<ProductFormProps> = ({ initialData }) => {
         price: 100,
         solde: false,
         newprice: 0,
-        brand:"",
+        brand: "",
       },
   });
 
@@ -282,12 +303,12 @@ const ProductForm: React.FC<ProductFormProps> = ({ initialData }) => {
 
             <FormField
               control={control}
-              name="category"
+              name="subCategory"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Category</FormLabel>
+                  <FormLabel>Sous Catégorie</FormLabel>
                   <FormControl>
-                    <Input placeholder="Category" {...field} />
+                    <Input placeholder="subCategory" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -339,10 +360,10 @@ const ProductForm: React.FC<ProductFormProps> = ({ initialData }) => {
                 render={({ field }) => (
                   <FormItem className="w-full"
                   >
-                    <FormLabel>Collections</FormLabel>
+                    <FormLabel>Catégorie</FormLabel>
                     <FormControl>
                       <MultiSelect
-                        placeholder="Select collections"
+                        placeholder="Selectionez les Catégories"
                         value={field.value}
                         onChange={(id) => field.onChange([...field.value, id])}
                         onRemove={(idToRemove) =>
@@ -357,20 +378,44 @@ const ProductForm: React.FC<ProductFormProps> = ({ initialData }) => {
               />
             )}
 
-             <FormField
-             
-            control={control}
-            name="brand"
-            render={({ field }) => (
-              <FormItem className="w-full">
-                <FormLabel>Marque</FormLabel>
-                <FormControl>
-                  <Input  placeholder="Marque" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
+            {colls.length > 0 && (
+              <FormField
+                control={control}
+                name="colls"
+                render={({ field }) => (
+                  <FormItem className="w-full"
+                  >
+                    <FormLabel>Collection</FormLabel>
+                    <FormControl>
+                      <MultiSelect
+                        placeholder="Selectionez la collection"
+                        value={field.value}
+                        onChange={(id) => field.onChange([...field.value, id])}
+                        onRemove={(idToRemove) =>
+                          field.onChange(field.value.filter((id) => id !== idToRemove))
+                        }
+                        colls={colls}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             )}
-          />
+            <FormField
+
+              control={control}
+              name="brand"
+              render={({ field }) => (
+                <FormItem className="w-full">
+                  <FormLabel>Marque</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Marque" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
           </div>
           <div className="space-y-4">
